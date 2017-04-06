@@ -1,0 +1,10 @@
+all: compile exe
+
+compile: 
+	ozc -c GUI.oz Input.oz Main.oz Player043BasicAI.oz PlayerManager.oz
+
+exe:
+	ozengine Main.oz
+
+clean:
+	rm *.ozf
