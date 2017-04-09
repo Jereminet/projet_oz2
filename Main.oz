@@ -3,6 +3,7 @@ import
    GUI
    Input
    PlayerManager
+   System
 define
    
    PortGUI AllPort
@@ -20,7 +21,7 @@ define
    in
 	  Position = pt(x:_ y:_)
 	  case AllPort of HPort|TPort then
-		 {Send HPort initPosition(Id Position)}
+		 {Send HPort initPosition(Id Position)}%{System.show 'playerinti'}
 		 {Send PortGUI initPlayer(Id Position)}
 		 {PlayerPtInit TPort}
 	  else skip
@@ -51,17 +52,20 @@ define
 				  {Broadcast AllPort sayMove(Id Direction)}
 				  {Send PortGUI movePlayer(Id Position)}
 			   end
-			   
+			   %{Delay 1000}
+			   %{System.show 'charge'}
+
 			   {Send HPort chargeItem(Id KindCharge)}
 			   if KindCharge == null then skip
 			   else {Broadcast AllPort sayCharge(Id KindCharge)}
 			   end
+			   {System.show 'coucou'}
 
-			   {Send HPort fireItem(Id KindFire)}
-			   if KindFire == null then skip
-			   else {Broadcast AllPort sayFire(Id KindFire)}
-			   end
-			   
+			   % {Send HPort fireItem(Id KindFire)}
+			   % case KindFire of null then skip
+			   % 	  []missile(P) then {Broadcast AllPort sayMissileExplode(
+			   % end
+			   {System.show 'salut'}
 			   % KindFire in {Send HPort fireItem(Id KindFire)}
 			   % if KindFire == null then skip
 			   % else {Broadcast AllPort sayFire(Id KindFire)}
@@ -79,6 +83,6 @@ in
    PortGUI = {GUI.portWindow}
    {Send PortGUI buildWindow}
    AllPort = {PlayerIDInit Input.players Input.colors id(id:1 color:_ name:_)}
-   {PlayerPtInit AllPort}
+   {PlayerPtInit AllPort}%{System.show 'dessiner'}
    if Input.isTurnByTurn then {Turn AllPort 1} end %else {Simultaneous} end
 end

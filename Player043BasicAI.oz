@@ -2,6 +2,7 @@ functor
 import
    Input
    OS
+   System
 export
    portPlayer:StartPlayer
 define
@@ -43,11 +44,11 @@ in
 		 {FindPos X Y}
 		 Position.x = X
 		 Position.y = Y
-		 {TreatStream T ID Life Position surface Missile Mine Sonar Drone PosMine}
+		 {TreatStream T ID Life Position surface AccMissile AccMine AccSonar AccDrone PosMine}
 	  []isSurface(Id Answer)|T then
 		 Id = ID
 		 Answer = CurDirect == surface 
-		 {TreatStream T ID Life CurPos east Missile Mine Sonar Drone PosMine} % peut etre east/west/...
+		 {TreatStream T ID Life CurPos east AccMissile AccMine AccSonar AccDrone PosMine} % peut etre east/west/...
 	  []move(Id Position Direction)|T then
 		 Id = ID
 		 if CurPos.x == 1 then Position = CurPos Direction = CurDirect
@@ -55,30 +56,45 @@ in
 			Position.y = CurPos.y
 			Direction = north
 		 end
-		 {TreatStream T ID Life Position Direction Missile Mine Sonar Drone PosMine}
+		 {TreatStream T ID Life Position Direction AccMissile AccMine AccSonar AccDrone PosMine}
 	  []dive|T then
-		 {TreatStream T ID Life CurPos north Missile Mine Sonar Drone PosMine}
+		 {TreatStream T ID Life CurPos north AccMissile AccMine AccSonar AccDrone PosMine}
 	  []saySurface(Id)|T then
-		 {TreatStream T ID Life CurPos CurDirect Missile Mine Sonar Drone PosMine}
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
 	  []sayMove(Id Direction)|T then
-		 {TreatStream T ID Life CurPos CurDirect Missile Mine Sonar Drone PosMine}
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
 	  []sayCharge(Id KindItem)|T then
-		 {TreatStream T ID Life CurPos CurDirect Missile Mine Sonar Drone PosMine}
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
 	  []chargeItem(Id KindItem)|T then
 		 Id = ID
 		 KindItem = null
-		 {TreatStream T ID Life CurPos CurDirect Missile Mine Sonar Drone PosMine} 
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine} 
 	  []fireItem(Id KindFire)|T then
 		 Id = ID
 		 KindFire = null
-		 {TreatStream T ID Life CurPos CurDirect Missile Mine Sonar Drone PosMine}
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
 	  []fireMine(Id Mine)|T then
 		 Id = ID
 		 Mine = PosMine
-		 {TreatStream T ID Life CurPos CurDirect Missile Mine Sonar Drone null}
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone null}
 	  []sayMinePlaced(Id)|T then
-		 {TreatStream T ID Life CurPos CurDirect Missile Mine Sonar Drone PosMine}
-	  []
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
+	  []sayMissileExplode(Id Position Message)|T then
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
+	  []sayMineExplode(Id Position Message)|T then
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
+	  []sayPassingDrone(Drone Id Message)|T then
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
+	  []sayAnswerDrone(Drone Id Answer)|T then
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
+	  []sayPassingDrone(Id Answer)|T then
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
+	  []sayAnswerSonar(Id Answer)|T then
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
+	  []sayDeath(Id)|T then
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
+	  []sayDamageTaken(Id Damage LifeLeft)|T then
+		 {TreatStream T ID Life CurPos CurDirect AccMissile AccMine AccSonar AccDrone PosMine}
 	  end
    end
 end

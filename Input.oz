@@ -64,7 +64,7 @@ in
 %%%% Players description %%%%
    
    NbPlayer = 1
-   Players = [player043basicai]
+   Players = [player042basicai]
    Colors = [orange]
 
 %%%% Thinking parameters (only in simultaneous) %%%%
