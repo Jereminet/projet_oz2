@@ -34,18 +34,30 @@ define
 	  end
    end
 
-   proc{Turn All Round}
+   fun{MakeSurf S N}
+	  if N == 0 then S
+	  else {MakeSurf {AdjoinList S [N#1]} N - 1}
+	  end
+   end
+
+   proc{Turn All Round Surf}
 	  {Delay 500}
-	  case All of nil then {Turn AllPort Round + 1}
-	  []HPort|TPort then
-	  	 if Round == 1 then {Send HPort dive}
+	  case All of nil then {Turn AllPort Round + 1 Surf}
+	  []HPort|TPort then {System.show Surf}
+		 if Round == 1 then {Send HPort dive}
+			{Turn TPort Round Surf}
 	  	 else Id Answer in
-	  		{Send HPort isSurface(Id Answer)}
-	  		if Answer then {Turn TPort Round}
+			{Send HPort isSurface(Id Answer)}
+			
+	  		if Answer andthen Surf.(Id.id) < Input.turnSurface then {System.show 'je passe mon tour !!!!!!!!!!'}  {Turn TPort Round {AdjoinList Surf [Id.id#Surf.(Id.id) + 1]}} 
 			else Position Direction KindCharge KindFire in
+			   if Surf.(Id.id) == Input.turnSurface then {Send HPort dive}
+			   else skip
+			   end
 			   Position = pt(x:_ y:_)
 			   {Send HPort move(Id Position Direction)}
 			   if Direction == surface then
+				  %{System.show ici}
 				  {Broadcast AllPort saySurface(Id)}
 				  {Send PortGUI surface(Id)}
 			   else
@@ -53,36 +65,43 @@ define
 				  {Send PortGUI movePlayer(Id Position)}
 			   end
 			   %{Delay 1000}
-			   %{System.show 'charge'}
+			   %{System.show Id.color}
 
 			   {Send HPort chargeItem(Id KindCharge)}
 			   if KindCharge == null then skip
 			   else {Broadcast AllPort sayCharge(Id KindCharge)}
 			   end
-			   {System.show 'coucou'}
+			   %{System.show Id.name}
 
-			   % {Send HPort fireItem(Id KindFire)}
-			   % case KindFire of null then skip
-			   % 	  []missile(P) then {Broadcast AllPort sayMissileExplode(
-			   % end
-			   {System.show 'salut'}
+			   {Send HPort fireItem(Id KindFire)}
+			   case KindFire of null then skip
+			   []missile(P) then
+				  Msg in {Broadcast AllPort sayMissileExplode(Id P Msg)}
+				  if Msg == null
+				  then skip
+				  else {Broadcast AllPort Msg}
+				  end
+			   end
+			   %{System.show 'salut'}
 			   % KindFire in {Send HPort fireItem(Id KindFire)}
 			   % if KindFire == null then skip
 			   % else {Broadcast AllPort sayFire(Id KindFire)}
 			   % end
 			end
+			{Turn TPort Round {AdjoinList Surf [(Id.id)#1]}}
 		 end
-		 {Turn TPort Round}
 	  end
    end
 
    %proc{Simultaneous}
    %   notImplemented
    %end
+   Surf
 in
+   Surf = {MakeSurf surf() Input.nbPlayer}
    PortGUI = {GUI.portWindow}
    {Send PortGUI buildWindow}
    AllPort = {PlayerIDInit Input.players Input.colors id(id:1 color:_ name:_)}
    {PlayerPtInit AllPort}%{System.show 'dessiner'}
-   if Input.isTurnByTurn then {Turn AllPort 1} end %else {Simultaneous} end
+   if Input.isTurnByTurn then {Turn AllPort 1 Surf} end %else {Simultaneous} end
 end

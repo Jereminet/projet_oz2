@@ -196,7 +196,7 @@ in
       for H in Path.2 do
 		 {RemoveItem Grid H}
       end
-      guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path.1|nil)
+	  guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path.1|nil)
    end
 
    fun{UpdateLife Life}

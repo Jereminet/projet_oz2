@@ -13,8 +13,23 @@ define
 
    %Update un State avec une liste de tuple contenant les valeurs qui ont changÃ©
    % state(a:1 b:2) + [b#3] = state(a:1 b:3)
-   fun{UpdateState State L}
-      {AdjoinList State L}
+
+   fun {Nth L A B}
+	  fun {NthRow L A}
+		 if L == nil then 1
+		 elseif A == 1 then {NthColumn L.1 B}
+		 else {NthRow L.2 A - 1}
+		 end
+	  end
+
+	  fun{NthColumn L B}
+		 if L == nil then 1
+		 elseif B == 1 then L.1
+		 else {NthColumn L.2 B - 1}
+		 end
+	  end
+   in
+	  {NthRow L A}
    end
 
    fun{InitPosition State ID Position}
@@ -23,7 +38,7 @@ define
 	  in
 		 A = ({Abs {OS.rand}} mod Input.nRow) + 1
 		 B = ({Abs {OS.rand}} mod Input.nColumn) + 1
-		 if {Nth {Nth Input.map A} B} == 0 then X = A Y = B
+		 if {Nth Input.map A B} == 0 then X = A Y = B
 		 else {FindPos X Y} end
 	  end
 	  X Y
@@ -32,22 +47,103 @@ define
 	  {FindPos X Y}
 	  Position.x = X
 	  Position.y = Y
-	  {AdjoinList State [curPos#Position id#ID]}
+	  {AdjoinList State [curPos#Position id#ID map#{ModMap State.map Position}]}
    end
 
-   fun{Move State ID Position Direction}
-      ID = State.id
-	  if State.curPos.x == 1 then State
-	  else Position.x = State.curPos.x - 1
-		 Position.y = State.curPos.y
-		 Direction = north
-		% {System.show Position}
-		 {AdjoinList State [curPos#Position curDir#Direction]}
+   fun{ModMap Map Pos}
+	  fun{ModColumn Map AccY}
+		 if AccY == 1 then 1|Map.2
+		 else Map.1|{ModColumn Map.2 AccY - 1}
+		 end
 	  end
+	  fun{ModRow Map AccX AccY}
+		 if AccX == 1 then {ModColumn Map.1 AccY}|Map.2
+		 else Map.1|{ModRow Map.2 AccX - 1 AccY}
+		 end
+	  end
+   in
+	  {ModRow Map Pos.x Pos.y}
+   end
+   
+   fun{Move State ID Position Direction}
+	  fun{PosAleat N}
+		 Pos Direct
+	  in
+		 %{System.show 'Aleatoire'}
+		 %{System.show N}
+		 if N == 0 then false
+		 else case {Abs {OS.rand}} mod 4 of 0 then
+				 Direct = north 
+				 Pos = pt(x:State.curPos.x - 1 y:State.curPos.y)
+			  []1 then
+				 Direct = west
+				 Pos = pt(x:State.curPos.x y:State.curPos.y - 1)
+			  []2 then
+				 Direct = south
+				 Pos = pt(x:State.curPos.x + 1 y:State.curPos.y)
+			  []3 then
+				 Direct = east
+				 Pos = pt(x:State.curPos.x y:State.curPos.y + 1)
+			  end
+			%{System.show Direct}
+			if {Nth State.map Pos.x Pos.y} == 0 then
+			   Position = Pos
+			   Direction = Direct
+			   true
+			else
+			   {PosAleat N - 1}
+			end
+		 end 
+	  end
+
+	  proc{PosTurn N}
+		 Pos Direct
+	  in
+		 %{System.show 'Turn'}
+		 case N of 0 then
+			Direct = north
+			Pos = pt(x:State.curPos.x - 1 y:State.curPos.y)
+		 []1 then
+			Direct = west
+			Pos = pt(x:State.curPos.x y:State.curPos.y - 1)
+		 []2 then
+			Direct = south
+			Pos = pt(x:State.curPos.x + 1 y:State.curPos.y)
+		 []3 then
+			Direct = east
+			Pos = pt(x:State.curPos.x y:State.curPos.y + 1)
+		 []4 then
+			Direct = surface
+			Pos = State.curPos
+		 end
+		 if {Nth State.map Pos.x Pos.y} == 0 orelse Direct == surface then
+			Position = Pos
+			Direction = Direct
+		 else
+			{PosTurn N + 1}
+		 end
+	  end
+   in
+	  ID = State.id
+	  %{System.show State.map}
+	  if {PosAleat 3} then skip
+	  else {PosTurn 0}
+	  end
+	  if Direction == surface then
+		 {AdjoinList State [curPos#Position curDir#Direction map#Input.map]}
+	  else
+		 {AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
+	  end
+%if State.curPos.x == 1
+	  %then Direction = surface Position = State.curPos State
+   %else	 
+%Position.x = State.curPos.x - 1
+		 %Position.y = State.curPos.y
+		 %Direction = north
    end
 
    fun{Dive State}
-      {AdjoinList State [curDir#north]}
+      {AdjoinList State [curDir#north map#{ModMap State.map State.curPos}]}
    end
 
    fun{ChargeItem State ID KindItem}
@@ -95,7 +191,7 @@ define
    fun{IsSurface State ID Answer}
       ID = State.id
 	  Answer = State.curDir == surface
-	  State
+	  State%{AdjoinList State [curDir#east]}
    end
 
    fun{SayMove State ID Direction}
@@ -104,7 +200,7 @@ define
    end
 
    fun{SaySurface State ID}
-	  {System.show 'Surface'}
+	  {System.show 'Surface 042'}
       State
    end
 
@@ -139,7 +235,7 @@ define
 			{AdjoinList State [life#0]}
 		 end
 	  else
-		 Message = sayDamageTaken(State.id 0 State.life)
+		 Message = null%sayDamageTaken(State.id 0 State.life)
 		 State
 	  end
    end
@@ -193,7 +289,7 @@ in
 	  State
    in
       Port = {NewPort Stream}
-	  State = submarine(curPos:pt(x:_ y:_) curDir:surface accMissile:0 accMine:0 accSonar:0 accDrone:0 posMine:null life:Input.maxDamage id:ID )
+	  State = submarine(curPos:pt(x:_ y:_) curDir:surface accMissile:0 accMine:0 accSonar:0 accDrone:0 posMine:null life:Input.maxDamage id:ID map:Input.map)
       thread
 		 {TreatStream Stream State}
       end
