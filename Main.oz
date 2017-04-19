@@ -50,7 +50,9 @@ define
 			{Send HPort isSurface(Id Answer)}
 			
 	  		if Answer andthen Surf.(Id.id) < Input.turnSurface then {System.show 'je passe mon tour !!!!!!!!!!'}  {Turn TPort Round {AdjoinList Surf [Id.id#Surf.(Id.id) + 1]}} 
-			else Position Direction KindCharge KindFire in
+			else
+			   Position Direction KindCharge KindFire Mine
+			in
 			   if Surf.(Id.id) == Input.turnSurface then {Send HPort dive}
 			   else skip
 			   end
@@ -76,12 +78,46 @@ define
 			   {Send HPort fireItem(Id KindFire)}
 			   case KindFire of null then skip
 			   []missile(P) then
-				  Msg in {Broadcast AllPort sayMissileExplode(Id P Msg)}
-				  if Msg == null
-				  then skip
-				  else {Broadcast AllPort Msg}
-				  end
+			      Msg
+			   in
+			      {System.show 'Missile'}
+			      {System.show P}
+			      {Send PortGUI explosion(Id P)}
+			      {Broadcast AllPort sayMissileExplode(Id P Msg)}
+			      if Msg == null
+			      then skip
+			      else {Broadcast AllPort Msg}
+			      end
+			   []mine(P) then
+			      {System.show 'Mine'}
+			      {System.show P}
+			      {Send PortGUI putMine(Id P)}
+			      {Broadcast AllPort sayMinePlaced(Id)}
 			   end
+
+			   {Send HPort fireMine(Id Mine)}
+			   case Mine of null then skip
+			   [] P then
+			      Msg
+			   in
+			      {System.show 'Mine Explose'}
+			      {System.show P}
+			      {Send PortGUI explosion(Id P)}
+			      {Send PortGUI removeMine(Id P)}
+			      {Broadcast AllPort sayMineExplode(Id P Msg)}
+			      case Msg of null then skip
+			      [] sayDeath(ID) then
+				 {Broadcast AllPort Msg}
+				 {Send PortGUI lifeUpdate(ID 0)}
+			      [] sayDamageTaken(ID DAM Life) then
+				 {System.show 'NewLife'}
+				 {System.show Life}
+				 {Send PortGUI lifeUpdate(ID Life)}
+				 {Broadcast AllPort Msg}
+				 
+			      end
+			   end  
+			   
 			   %{System.show 'salut'}
 			   % KindFire in {Send HPort fireItem(Id KindFire)}
 			   % if KindFire == null then skip

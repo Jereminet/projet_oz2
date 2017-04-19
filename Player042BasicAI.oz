@@ -11,7 +11,7 @@ define
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   %Update un State avec une liste de tuple contenant les valeurs qui ont changÃ©
+   %Update un State avec une liste de tuple contenant les valeurs qui ont changees
    % state(a:1 b:2) + [b#3] = state(a:1 b:3)
 
    fun {Nth L A B}
@@ -134,12 +134,6 @@ define
 	  else
 		 {AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
 	  end
-%if State.curPos.x == 1
-	  %then Direction = surface Position = State.curPos State
-   %else	 
-%Position.x = State.curPos.x - 1
-		 %Position.y = State.curPos.y
-		 %Direction = north
    end
 
    fun{Dive State}
@@ -148,73 +142,112 @@ define
 
    fun{ChargeItem State ID KindItem}
       ID = State.id
-	  if State.accMissile < Input.missile then
-		 if State.accMissile + 1 == Input.missile then KindItem = missile
-		 else KindItem = null
-		 end
-		 {AdjoinList State [accMissile#State.accMissile + 1]} 
-	  elseif State.accMine < Input.mine then
-		 if State.accMine + 1 == Input.mine then KindItem = mine
-		 else KindItem = null
-		 end
-		 {AdjoinList State [accMine#State.accMine + 1]}
-	  elseif State.accSonar < Input.sonar then
-		 if State.accSonar + 1 == Input.sonar then KindItem = sonar
-		 else KindItem = null
-		 end
-		 {AdjoinList State [accSonar#State.accSonar + 1]}
-	  elseif State.accDrone < Input.drone then
-		 if State.accDrone + 1 == Input.drone then KindItem = drone
-		 else KindItem = null
-		 end
-		 {AdjoinList State [accDrone#State.accDrone + 1]}
-	  end
+
+      case  {Abs {OS.rand}} mod 4
+      of 0 then
+	 if State.accMissile + 1 == Input.missile then KindItem = missile
+	 else KindItem = null
+	 end
+	 {AdjoinList State [accMissile#State.accMissile + 1]}
+      [] 1 then
+	 if State.accMine + 1 == Input.mine then KindItem = mine
+	 else KindItem = null
+	 end
+	 {AdjoinList State [accMine#State.accMine + 1]}
+      [] 2 then
+	 if State.accSonar + 1 == Input.sonar then KindItem = sonar
+	 else KindItem = null
+	 end
+	 {AdjoinList State [accSonar#State.accSonar + 1]}
+      [] 3 then
+	 if State.accDrone + 1 == Input.drone then KindItem = drone
+	 else KindItem = null
+	 end
+	 {AdjoinList State [accDrone#State.accDrone + 1]}
+      end
    end
 
-   fun{FireItem State ID KindFire}
+   fun{FireItem State ?ID ?KindFire}
+      ID
+      Pos_aleat
+      fun{AleaPos}
+	 Pos = pt(x:_ y:_)
+      in
+	 Pos.x = 1 + {Abs {OS.rand}} mod Input.nRow
+	 Pos.y = 1 + {Abs {OS.rand}} mod Input.nColumn
+	 if {Nth Input.map Pos.x Pos.y} == 0 andthen
+	    {Abs State.curPos.x - Pos.x} + {Abs State.curPos.y - Pos.y} > 2
+	 then Pos
+	 else {AleaPos}
+	 end
+      end
+   in
       ID = State.id
-	  if State.accMissile == Input.missile then
-		 KindFire = missile(pt(x:State.curPos.x y:State.curPos.y + 2))
-		 {AdjoinList State [accMissile#0]}
-	  else
-		 KindFire = null
-		 State
-	  end
+      if State.accMissile >= Input.missile then
+	 KindFire = missile({AleaPos})
+	 {AdjoinList State [accMissile#(State.accMissile - Input.missile)]}
+      elseif State.accMine >= Input.mine then
+	 Pos = {AleaPos}
+      in
+	 KindFire = mine(Pos)
+	 {AdjoinList State [accMine#(State.accMine - Input.mine) posMine#(Pos|State.posMine)]}
+%      elseif State.accSonar >= Input.sonar then
+%	 KindFire = sonar()
+%	 {AdjoinList State [accSonar#(State.accSonar - Input.sonar)]}
+%      elseif State.accDrone >= Input.drone then
+%	 case {Abs {OS.rand}} mod 2
+%	    of 0 then KindFire = drone(raw)
+%	 {AdjoinList State [accDrone#(State.accDrone - Input.drone)]}
+      else
+	 KindFire = null
+	 State
+      end
    end
 
    fun{FireMine State ID Mine}
       ID = State.id
-	  Mine = State.posMine
-	  {AdjoinList State [posMine#null]}
+      if State.posMine == nil then
+	 Mine = null
+	 State
+      else
+	 if State.timeMine == 1 then
+	    Mine = null
+	    {AdjoinList State [timeMine#0]}
+	 else
+	    Mine = (State.posMine).1
+	    {AdjoinList State [timeMine#1 posMine#((State.posMine).2)]}
+	 end
+      end
    end
 
-   fun{IsSurface State ID Answer}
+   fun{IsSurface State ?ID ?Answer}
       ID = State.id
-	  Answer = State.curDir == surface
-	  State%{AdjoinList State [curDir#east]}
+      Answer = State.curDir == surface
+      State
    end
 
    fun{SayMove State ID Direction}
-	  {System.show Direction}
+      {System.show Direction}
       State
    end
 
    fun{SaySurface State ID}
-	  {System.show 'Surface 042'}
+      {System.show "Surface"}
+      {System.show ID}
       State
    end
 
    fun{SayCharge State ID KindItem}
-	  {System.show KindItem}
+      {System.show KindItem}
       State
    end
 
    fun{SayMinePlaced State ID}
-	  {System.show 'Mine Placed'}
+      {System.show 'Mine Placed'}
       State
    end
 
-   fun{SayMissileExplode State ID Position Message}
+    fun{SayMissileExplode State ID Position Message}
 	  {System.show Position}
       Dist in
 	  Dist = {Abs State.curPos.x - Position.x} + {Abs State.curPos.y - Position.y}
@@ -289,7 +322,7 @@ in
 	  State
    in
       Port = {NewPort Stream}
-	  State = submarine(curPos:pt(x:_ y:_) curDir:surface accMissile:0 accMine:0 accSonar:0 accDrone:0 posMine:null life:Input.maxDamage id:ID map:Input.map)
+	  State = submarine(curPos:pt(x:_ y:_) curDir:surface accMissile:0 accMine:0 accSonar:0 accDrone:0 posMine:nil timeMine:1 life:Input.maxDamage id:ID map:Input.map)
       thread
 		 {TreatStream Stream State}
       end
