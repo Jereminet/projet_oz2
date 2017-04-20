@@ -11,6 +11,8 @@ in
 	  case Kind
 	  of player042basicai then {Player042BasicAI.portPlayer Color ID}
 	  []player043basicai then {Player042BasicAI.portPlayer Color ID}
+	  []player044basicai then {Player042BasicAI.portPlayer Color ID}
+	  []player045basicai then {Player042BasicAI.portPlayer Color ID}
 	  end
    end
 end

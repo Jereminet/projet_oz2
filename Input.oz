@@ -69,9 +69,9 @@ in
 
 %%%% Players description %%%%
    
-   NbPlayer = 2
-   Players = [player042basicai player043basicai]
-   Colors = [orange red]
+   NbPlayer = 4
+   Players = [player042basicai player042basicai player042basicai player042basicai]
+   Colors = [orange red blue green]
 
 %%%% Thinking parameters (only in simultaneous) %%%%
    
@@ -88,10 +88,10 @@ in
 
 %%%% Number of load for each item %%%%
    
-   Missile = 3
+   Missile = 4
    Mine = 1
-   Sonar = 3
-   Drone = 3
+   Sonar = 4
+   Drone = 4
 
 %%%% Distances of placement %%%%
    
