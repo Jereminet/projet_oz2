@@ -3,6 +3,7 @@ import
    Input
    OS
    System
+   Tk at 'x-oz://system/Tk.ozf'
 export
    portPlayer:StartPlayer
 define
@@ -66,73 +67,40 @@ define
    end
    
    fun{Move State ID Position Direction}
-      fun{PosAleat N}
-		 Pos Direct
-      in
-		 %{System.show 'Aleatoire'}
-		 %{System.show N}
-		 if N == 0 then false
-		 else case {Abs {OS.rand}} mod 4 of 0 then
-				 Direct = north 
-				 Pos = pt(x:State.curPos.x - 1 y:State.curPos.y)
-			  []1 then
-				 Direct = west
-				 Pos = pt(x:State.curPos.x y:State.curPos.y - 1)
-			  []2 then
-				 Direct = south
-				 Pos = pt(x:State.curPos.x + 1 y:State.curPos.y)
-			  []3 then
-				 Direct = east
-				 Pos = pt(x:State.curPos.x y:State.curPos.y + 1)
-			  end
-			%{System.show Direct}
-			if {Nth State.map Pos.x Pos.y} == 0 then
-			   Position = Pos
-			   Direction = Direct
-			   true
-			else
-			   {PosAleat N - 1}
-			end
-		 end 
-      end
-
-      proc{PosTurn N}
-		 Pos Direct
-      in
-		 %{System.show 'Turn'}
-		 case N of 0 then
-			Direct = north
-			Pos = pt(x:State.curPos.x - 1 y:State.curPos.y)
-		 []1 then
-			Direct = west
-			Pos = pt(x:State.curPos.x y:State.curPos.y - 1)
-		 []2 then
-			Direct = south
-			Pos = pt(x:State.curPos.x + 1 y:State.curPos.y)
-		 []3 then
-			Direct = east
-			Pos = pt(x:State.curPos.x y:State.curPos.y + 1)
-		 []4 then
-			Direct = surface
-			Pos = State.curPos
-		 end
-		 if {Nth State.map Pos.x Pos.y} == 0 orelse Direct == surface then
-			Position = Pos
-			Direction = Direct
-		 else
-			{PosTurn N + 1}
-		 end
-      end
+	  Ans W E B
    in
-      ID = State.id
-	  %{System.show State.map}
-      if {PosAleat 3} then skip
-      else {PosTurn 0}
-      end
-      if Direction == surface then
+	  W = {New Tk.toplevel tkInit}
+	  E = {New Tk.entry tkInit(parent:W)}
+	  B = {New Tk.button tkInit(parent:W
+								text:'OK'
+								action:proc{$}
+										  Ans = {E tkReturn(get $)}
+									   end)}
+	  {Tk.send pack(E B fill:x padx:4 pady:4)}
+	  ID = State.id
+	  case Ans of surface then {W tkClose}
 		 {AdjoinList State [curPos#Position curDir#Direction map#Input.map]}
-      else
+      []"North" then
+		 {W tkClose}
+		 Position = pt(x:State.curPos.x - 1 y:State.curPos.y)
+		 Direction = north
 		 {AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
+	  []"South" then
+		 {W tkClose}
+		 Position = pt(x:State.curPos.x + 1 y:State.curPos.y)
+		 Direction = north
+		 {AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
+	  []"West" then
+		 {W tkClose}
+		 Position = pt(x:State.curPos.x y:State.curPos.y - 1)
+		 Direction = north
+		 {AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
+	  []"East" then
+		 {W tkClose}
+		 Position = pt(x:State.curPos.x y:State.curPos.y + 1)
+		 Direction = north
+		 {AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
+	  else {Move State ID Position Direction}
       end
    end
 

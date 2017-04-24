@@ -143,7 +143,7 @@ in
       in
 	 guiPlayer(id:ID score:HandleScore submarine:Handle mines:Mine path:Path) = State
 	 pt(x:X y:Y) = Position
-	 LabelMine = label(text:"M" handle:HandleMine borderwidth:5 relief:raised bg:black ipadx:5 ipady:5)
+	 LabelMine = label(text:"M" handle:HandleMine borderwidth:5 relief:raised bg:ID.color ipadx:5 ipady:5)
 	 {Grid.grid configure(LabelMine row:X+1 column:Y+1)}
 	 {HandleMine 'raise'()}
 	 {Handle 'raise'()}

@@ -70,7 +70,7 @@ in
 %%%% Players description %%%%
    
    NbPlayer = 4
-   Players = [player042basicai player042basicai player042basicai player042basicai]
+   Players = [player042basicai player043basicai player044basicai player045basicai]
    Colors = [orange red blue green]
 
 %%%% Thinking parameters (only in simultaneous) %%%%
