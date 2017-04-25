@@ -124,16 +124,19 @@ define
 		 end
       end
    in
-      ID = State.id
+	  if State.life =< 0 then ID = null State
+	  else
+		 ID = State.id
 	  %{System.show State.map}
-      if {PosAleat 3} then skip
-      else {PosTurn 0}
-      end
-      if Direction == surface then
-		 {AdjoinList State [curPos#Position curDir#Direction map#Input.map]}
-      else
-		 {AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
-      end
+		 if {PosAleat 3} then skip
+		 else {PosTurn 0}
+		 end
+		 if Direction == surface then
+			{AdjoinList State [curPos#Position curDir#Direction map#Input.map]}
+		 else
+			{AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
+		 end
+	  end
    end
 
    fun{Dive State}
@@ -314,6 +317,7 @@ define
       Type
       X
    in
+	  ID = State.id
       drone(Type X) = Drone
       if Type == row then
 		 Answer = State.curPos.x == X
@@ -327,6 +331,7 @@ define
    end
 
    fun{SayPassingSonar State ID Answer}
+	  ID = State.id
       if {Abs {OS.rand}} mod 2 == 0 then
 		 Answer = pt(x:State.curPos.x y:({Abs {OS.rand}} mod Input.nColumn + 1))
       else

@@ -47,30 +47,30 @@ in
 
 %%%% Description of the map %%%%
    
-   NRow = 5%10
-   NColumn = 5%10
+   NRow = 5 %10
+   NColumn = 5 % 10
 
-   % Map = [[0 0 0 0 0 0 0 0 0 0]
-   % 		  [0 0 0 0 0 0 0 0 0 0]
-   % 		  [0 0 0 1 1 0 0 0 0 0]
-   % 		  [0 0 1 1 0 0 1 0 0 0]
-   % 		  [0 0 0 0 0 0 0 0 0 0]
-   % 		  [0 0 0 0 0 0 0 0 0 0]
-   % 		  [0 0 0 1 0 0 1 1 0 0]
-   % 		  [0 0 1 1 0 0 1 0 0 0]
-   % 		  [0 0 0 0 0 0 0 0 0 0]
-   % 	  [0 0 0 0 0 0 0 0 0 0]]
+   %Map = [[0 0 0 0 0 0 0 0 0 0]
+     % 		  [0 0 0 0 0 0 0 0 0 0]
+     % 		  [0 0 0 1 1 0 0 0 0 0]
+     % 		  [0 0 1 1 0 0 1 0 0 0]
+     % 		  [0 0 0 0 0 0 0 0 0 0]
+     % 		  [0 0 0 0 0 0 0 0 0 0]
+     % 		  [0 0 0 1 0 0 1 1 0 0]
+     % 		  [0 0 1 1 0 0 1 0 0 0]
+     % 		  [0 0 0 0 0 0 0 0 0 0]
+     % 	  [0 0 0 0 0 0 0 0 0 0]]
    Map = [[0 0 0 1 0]
-	  [0 1 0 0 0]
-	  [0 1 0 0 0]
-	  [0 0 0 1 0]
-	  [0 0 1 1 0]]
+   		  [0 1 0 0 0]
+   		  [0 1 0 0 0]
+   		  [0 0 0 1 0]
+   		  [0 0 1 1 0]]
 
 
 %%%% Players description %%%%
    
    NbPlayer = 4
-   Players = [player042basicai player043basicai player044basicai player045basicai]
+   Players = [player1 player2 player3 player4]
    Colors = [orange red blue green]
 
 %%%% Thinking parameters (only in simultaneous) %%%%
@@ -84,14 +84,14 @@ in
 
 %%%% Life %%%%
 
-   MaxDamage = 4
+   MaxDamage = 400000
 
 %%%% Number of load for each item %%%%
    
-   Missile = 4
-   Mine = 1
-   Sonar = 4
-   Drone = 4
+   Missile = 3
+   Mine = 3
+   Sonar = 3
+   Drone = 3
 
 %%%% Distances of placement %%%%
    

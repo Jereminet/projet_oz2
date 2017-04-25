@@ -131,11 +131,12 @@ define
 	  end
    end
    
-   proc{Turn All Round Surf}
-      fun{CanPlay HPort ?NewSurf ?Id}
+   proc{Turn All Round Surf CountDead}
+      fun{CanPlay HPort ?NewSurf ?Id ?Dead}
 		 if Round == 1 then % INITIALISATION
 			{Send HPort dive}
-			NewSurf = Surf
+		    NewSurf = Surf
+		    Dead = 0
 			false
 		 else
 			Answer
@@ -144,17 +145,21 @@ define
 			if Id == null then % sub est mort
 			   %{System.show 'je suis mort RIP RPZ wouech wouech'}
 			   NewSurf = Surf
+			   Dead = 1
 			   false
 			elseif Answer andthen Surf.(Id.id) < Input.turnSurface then % a la surface et on doit y rester encore
 			   %{System.show 'je passe mon tour !!!!!!!!!!'}
 			   NewSurf = {AdjoinList Surf [Id.id#Surf.(Id.id) + 1]}
+			   Dead = 0
 			   false
 			elseif Answer andthen Surf.(Id.id) == Input.turnSurface then % on peut dive
 			   {Send HPort dive}
 			   NewSurf = Surf
+			   Dead = 0
 			   true
 			else
 			   NewSurf = Surf
+			   Dead = 0
 			   true
 			end
 		 end
@@ -173,18 +178,22 @@ define
 		 end
       end
    in
-      {Delay 200}
-      case All of nil then {Turn AllPort Round + 1 Surf}
+      {Delay 500}
+      case All of nil then
+	 if CountDead == Input.nbPlayer -1 then {System.show 'FINISH'}
+	 else {Turn AllPort Round + 1 Surf 0}
+	 end
+	 
       []HPort|TPort then
-		 NewSurf Id
+		 NewSurf Id Dead
       in
-		 if {CanPlay HPort NewSurf Id} == false then {Turn TPort Round NewSurf}
+		 if {CanPlay HPort NewSurf Id Dead} == false then {Turn TPort Round NewSurf CountDead+Dead}
 		 else
 			{CanMove HPort}
 			{CanCharge HPort}
 			{CanFire HPort}
 			{CanMine HPort}
-			{Turn TPort Round {AdjoinList Surf [(Id.id)#1]}}
+			{Turn TPort Round {AdjoinList Surf [(Id.id)#1]} CountDead}
 		 end
       end
    end
@@ -198,28 +207,34 @@ define
 		 Id Position Direction
       in
 		 {Send HPort move(Id Position Direction)}
-		 if Direction == surface then
+		 if Id == null then
+			ignore
+		 elseif Direction == surface then
 			{Broadcast AllPort saySurface(Id)}
 			{Send PortGUI surface(Id)}
 			{Delay Input.turnSurface * 1000}
-			true
+			onSurface
 		 else
 			{Broadcast AllPort sayMove(Id Direction)}
 			{Send PortGUI movePlayer(Id Position)}
-			false
+			notSurface
 		 end
       end
+	  Moving
    in
 	  {Thinking}
-	  if {CanMove HPort} then
+	  Moving = {CanMove HPort}
+	  if Moving == onSurface then
 		 {Send HPort dive} {PlayingSimul HPort}
-	  else
+	  elseif Moving == notSurface then
 		 {Thinking}
 		 {CanCharge HPort}
 		 {Thinking}
 		 {CanFire HPort}
 		 {Thinking}
 		 {CanMine HPort}
+		 {PlayingSimul HPort}
+	  else
 		 {PlayingSimul HPort}
 	  end
    end
@@ -239,5 +254,5 @@ in
    {Send PortGUI buildWindow}
    AllPort = {PlayerIDInit Input.players Input.colors id(id:1 color:_ name:_)}
    {PlayerPtInit AllPort}%{System.show 'dessiner'}
-   if Input.isTurnByTurn then {Turn AllPort 1 Surf} else {Simultaneous AllPort} end
+   if Input.isTurnByTurn then {Turn AllPort 1 Surf 0} else {Simultaneous AllPort} end
 end

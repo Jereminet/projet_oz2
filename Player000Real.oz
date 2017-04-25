@@ -14,6 +14,7 @@ define
 
    %Update un State avec une liste de tuple contenant les valeurs qui ont changees
    % state(a:1 b:2) + [b#3] = state(a:1 b:3)
+   Time = 10000
 
    fun {Nth L A B}
       fun {NthRow L A}
@@ -42,12 +43,28 @@ define
 		 if {Nth Input.map A B} == 0 then X = A Y = B
 		 else {FindPos X Y} end
       end
-      X Y
+      X Y W L1 B Unit
    in
       ID = State.id
       {FindPos X Y}
       Position.x = X
       Position.y = Y
+	 
+	  W = {New Tk.toplevel tkInit(title:'Welcome')}
+	  L1 = {New Tk.message tkInit(parent:W
+								  text:'Welcome on board captain. Your position on the map is '#X#','#Y#'.\n I recommand you to Keep track of your moves and items on a paper. You can find a map of the ocean in the Input file. This will certainly help you in your fight. You can recuit some crews to help you. Your goal is to destroy all submarines in the ocean without dying. Good luck !'
+								 justify:left)}
+
+	  B = {New Tk.button tkInit(parent:W
+								text:'OK'
+								action:proc{$}
+										  {W tkClose}
+										  Unit = unit
+									   end)}
+
+	  {Tk.send pack(L1 B fill:x padx:4 pady:4)}
+
+	  {Wait Unit}
       {AdjoinList State [curPos#Position id#ID map#{ModMap State.map Position}]}
    end
 
@@ -67,130 +84,241 @@ define
    end
    
    fun{Move State ID Position Direction}
-	  Ans W E B
-   in
-	  W = {New Tk.toplevel tkInit}
-	  E = {New Tk.entry tkInit(parent:W)}
-	  B = {New Tk.button tkInit(parent:W
-								text:'OK'
-								action:proc{$}
-										  Ans = {E tkReturn(get $)}
-									   end)}
-	  {Tk.send pack(E B fill:x padx:4 pady:4)}
-	  ID = State.id
-	  case Ans of surface then {W tkClose}
-		 {AdjoinList State [curPos#Position curDir#Direction map#Input.map]}
-      []"North" then
-		 {W tkClose}
-		 Position = pt(x:State.curPos.x - 1 y:State.curPos.y)
-		 Direction = north
-		 {AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
-	  []"South" then
-		 {W tkClose}
-		 Position = pt(x:State.curPos.x + 1 y:State.curPos.y)
-		 Direction = north
-		 {AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
-	  []"West" then
-		 {W tkClose}
-		 Position = pt(x:State.curPos.x y:State.curPos.y - 1)
-		 Direction = north
-		 {AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
-	  []"East" then
-		 {W tkClose}
-		 Position = pt(x:State.curPos.x y:State.curPos.y + 1)
-		 Direction = north
-		 {AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
-	  else {Move State ID Position Direction}
-      end
-   end
+	  proc{ChoseMove}
+		 Direct Pos L1 W BNorth BSouth BWest BEast BSurface
+	  in
+		 W = {New Tk.toplevel tkInit(title:'Moving')}
+		 L1 = {New Tk.label tkInit(parent:W
+								   text:'Chose your direction')}
+		 BNorth = {New Tk.button tkInit(parent:W
+										text:'North'
+										action:proc{$}
+												  Direct = north
+												  Pos = pt(x:State.curPos.x - 1 y:State.curPos.y)
+											   end)}
+		 BSouth = {New Tk.button tkInit(parent:W
+										text:'South'
+										action:proc{$}
+												  Direct = south
+												  Pos = pt(x:State.curPos.x + 1 y:State.curPos.y)
+											   end)}
+		 BWest = {New Tk.button tkInit(parent:W
+									   text:'West'
+									   action:proc{$}
+												 Direct = west
+												 Pos = pt(x:State.curPos.x y:State.curPos.y - 1)
+											  end)}
+		 BEast = {New Tk.button tkInit(parent:W
+									   text:'East'
+									   action:proc{$}
+												 Direct = east
+												 Pos = pt(x:State.curPos.x y:State.curPos.y + 1)
+											  end)}
+		 BSurface = {New Tk.button tkInit(parent:W
+										  text:'Surface'
+										  action:proc{$}
+													Direct = surface
+													Pos = pt(x:State.curPos.x y:State.curPos.y)
+												 end)}
+	  
+		 {Tk.send pack(L1 BNorth BSouth BWest BEast BSurface fill:x padx:4 pady:4)}
 
+		 if {Nth State.map Pos.x Pos.y} == 0 orelse Direct == surface then
+			{W tkClose}
+			Position = Pos
+			Direction = Direct
+		 else
+			{W tkClose}
+			{ChoseMove}
+		 end
+	  end
+   in
+	  if State.life =< 0 then
+		 ID = null
+	  else
+		 {ChoseMove}
+		 ID = State.id
+		 if Direction == surface then
+			{AdjoinList State [curPos#Position curDir#Direction map#Input.map]}
+		 else
+			{AdjoinList State [curPos#Position curDir#Direction map#{ModMap State.map Position}]}
+		 end
+	  end
+   end
+   
    fun{Dive State}
       {AdjoinList State [curDir#north map#{ModMap State.map State.curPos}]}
    end
 
    fun{ChargeItem State ID KindItem}
+	  W L1 BMissile BMine BSonar BDrone NewState
+   in
       ID = State.id
+	  W = {New Tk.toplevel tkInit(title:'Charging item')}
+	  L1 = {New Tk.label tkInit(parent:W
+								text:'Chose the item you want to charge')}
+	  BMissile = {New Tk.button tkInit(parent:W
+									   text:'Missile'
+									   action:proc{$}
+												 if State.accMissile + 1 == Input.missile then KindItem = missile
+												 else KindItem = null
+												 end
+												 NewState = {AdjoinList State [accMissile#State.accMissile + 1]}
+											  end)}
+	  
+	  BMine = {New Tk.button tkInit(parent:W
+									   text:'Mine'
+									   action:proc{$}
+												 if State.accMine + 1 == Input.mine then KindItem = mine
+												 else KindItem = null
+												 end
+												 NewState = {AdjoinList State [accMine#State.accMine + 1]}
+											  end)}
 
-      case  {Abs {OS.rand}} mod 4
-      of 0 then
-		 if State.accMissile + 1 == Input.missile then KindItem = missile
-		 else KindItem = null
-		 end
-		 {AdjoinList State [accMissile#State.accMissile + 1]}
-      [] 1 then
-		 if State.accMine + 1 == Input.mine then KindItem = mine
-		 else KindItem = null
-		 end
-		 {AdjoinList State [accMine#State.accMine + 1]}
-      [] 2 then
-		 if State.accSonar + 1 == Input.sonar then KindItem = sonar
-		 else KindItem = null
-		 end
-		 {AdjoinList State [accSonar#State.accSonar + 1]}
-      [] 3 then
-		 if State.accDrone + 1 == Input.drone then KindItem = drone
-		 else KindItem = null
-		 end
-		 {AdjoinList State [accDrone#State.accDrone + 1]}
-      end
+	  BSonar = {New Tk.button tkInit(parent:W
+									   text:'Sonar'
+									   action:proc{$}
+												 if State.accSonar + 1 == Input.sonar then KindItem = sonar
+												 else KindItem = null
+												 end
+												 NewState = {AdjoinList State [accSonar#State.accSonar + 1]}
+											  end)}
+
+	  BDrone = {New Tk.button tkInit(parent:W
+									   text:'Drone'
+									   action:proc{$}
+												 if State.accDrone + 1 == Input.drone then KindItem = drone
+												 else KindItem = null
+												 end
+												 NewState = {AdjoinList State [accDrone#State.accDrone + 1]}
+											  end)}
+
+	  {Tk.send pack(L1 BMissile BMine BSonar BDrone fill:x padx:4 pady:4)}
+
+	  {Wait NewState}
+	  {W tkClose}
+	  NewState
    end
 
    fun{FireItem State ?ID ?KindFire}
-      fun{AleaPos Min Max Type}
-		 Pos = pt(x:_ y:_)
-      in
-		 Pos.x = State.curPos.x - Max  + {Abs {OS.rand}} mod (2 * Max +1)
-		 Pos.y =  State.curPos.y - Max  + {Abs {OS.rand}} mod (2 * Max +1)
-		 if Pos.x > 0 andthen Pos.x =< Input.nRow andthen
-			Pos.y > 0 andthen Pos.y =< Input.nColumn andthen
-			{Nth Input.map Pos.x Pos.y} == 0 andthen
-			{Abs State.curPos.x - Pos.x} + {Abs State.curPos.y - Pos.y} >= Min andthen
-			{Abs State.curPos.x - Pos.x} + {Abs State.curPos.y - Pos.y} =< Max
-		 then
-			if Type == mine orelse
-			   {Abs State.curPos.x - Pos.x} + {Abs State.curPos.y - Pos.y} >= 2 then
-			   Pos
+	  fun{CheckDist X Y Kind}
+		 case Kind of missile then
+			{Abs State.curPos.x - X} + {Abs State.curPos.y - Y} =< Input.maxDistanceMissile andthen {Abs State.curPos.x - X} + {Abs State.curPos.y - Y} >= Input.minDistanceMissile
+		 []mine then
+			{Abs State.curPos.x - X} + {Abs State.curPos.y - Y} =< Input.maxDistanceMine andthen {Abs State.curPos.x - X} + {Abs State.curPos.y - Y} >= Input.minDistanceMine
+		 end
+	  end
+	  fun{PosFiring Kind}
+		 WPos Ex Ey L1 B X Y
+	  in
+		 {W tkClose}
+		 WPos = {New Tk.toplevel tkInit(title:'Position')}
+		 Ex = {New Tk.entry tkInit(parent:WPos)}
+		 Ey = {New Tk.entry tkInit(parent:WPos)}
+		 if Kind == drone then
+			L1 = {New Tk.label tkInit(parent:WPos
+									  text:'Where do you want to lunch the drone ? (First enter row or column then the number)')}
+			B = {New Tk.button tkInit(parent:WPos
+									  text:'OK'
+									  action:proc{$}
+												X = {String.toAtom {Ex tkReturn(get $)}}
+												Y = {String.toInt {Ey tkReturn(get $)}}
+											 end)}
+			{Tk.send pack(L1 Ex Ey B fill:x padx:4 pady:4)}
+			if (X == row andthen Y > Input.nRow) orelse (X == column andthen Y > Input.nColumn) orelse Y < 1 then
+			   {WPos tkClose}
+			   {PosFiring Kind}
 			else
-			   {AleaPos Min Max Type}
+			   {WPos tkClose}
+			   drone(X Y)
 			end
-		 else {AleaPos Min Max Type}
-		 end
-      end
-   in
-      ID = State.id
-      if State.accMissile >= Input.missile then
-		 KindFire = missile({AleaPos Input.minDistanceMissile Input.maxDistanceMissile missile})
-		 {AdjoinList State [accMissile#(State.accMissile - Input.missile)]}
-      elseif State.accMine >= Input.mine then
-		 Pos = {AleaPos Input.minDistanceMine Input.maxDistanceMine mine}
-      in
-		 KindFire = mine(Pos)
-		 {AdjoinList State [accMine#(State.accMine - Input.mine) posMine#(Pos|State.posMine)]}
-      elseif State.accSonar >= Input.sonar then
-		 KindFire = sonar()
-		 {AdjoinList State [accSonar#(State.accSonar - Input.sonar)]}
-	  elseif State.accDrone >= Input.drone then
-		 case {Abs {OS.rand}} mod 2
-		 of 0 then KindFire = drone(row {Abs {OS.rand} mod Input.nRow +1})
-		 [] 1 then KindFire = drone(column {Abs {OS.rand} mod Input.nColumn +1})
-		 end
-		 {AdjoinList State [accDrone#(State.accDrone - Input.drone)]}
-      else
-		 KindFire = null
-		 State
-      end
-   end
+		 else
+			L1 = {New Tk.label tkInit(parent:WPos
+									  text:'Where do you want to lunch the missile/mine ? (First enter the row then the column)')}
+			B = {New Tk.button tkInit(parent:WPos
+									  text:'OK'
+									  action:proc{$}
+												X = {String.toInt {Ex tkReturn(get $)}}
+												Y = {String.toInt {Ey tkReturn(get $)}}
+											 end)}
+			
+			{Tk.send pack(L1 Ex Ey B fill:x padx:4 pady:4)}
 
-   fun{FireMine State ID Mine}
-	  fun{ChoseMine LMine}
-		 case LMine of nil then null
-		 []HMine|TMine then
-			if {Abs State.curPos.x - HMine.x} + {Abs State.curPos.y - HMine.y} >= 2 then HMine
-			else {ChoseMine TMine}
+			if {Nth Input.map X Y} == 0 andthen {CheckDist X Y Kind} then
+			   {WPos tkClose}
+			   pt(x:X y:Y)
+			else
+			   {WPos tkClose}
+			   {PosFiring Kind}
 			end
 		 end
 	  end
+	  W L1 BMissile BMine BSonar BDrone BNull NewState
+   in
+	  W = {New Tk.toplevel tkInit(title:'Firing')}
+	  L1 = {New Tk.label tkInit(parent:W
+								text:'Chose the item you want to fire')}
+	  BMissile = {New Tk.button tkInit(parent:W
+									   text:'Missile'
+									   action:proc{$}
+												 if State.accMissile >= Input.missile then
+													KindFire = missile({PosFiring missile})
+													NewState = {AdjoinList State [accMissile#(State.accMissile - Input.missile)]}
+												 else
+													skip
+												 end
+											  end)}
+	  
+	  BMine = {New Tk.button tkInit(parent:W
+									text:'Mine'
+									action:proc{$}
+											  if State.accMine >= Input.mine then
+												 KindFire = mine({PosFiring mine})
+												 NewState = {AdjoinList State [accMine#(State.accMine - Input.mine) posMine#(KindFire.1|State.posMine)]}
+											  else
+												 skip
+											  end
+										   end)}
 
+	  BSonar = {New Tk.button tkInit(parent:W
+									 text:'Sonar'
+									 action:proc{$}
+											   if State.accSonar >= Input.sonar then
+												  KindFire = sonar()
+												  {W tkClose}
+												  NewState = {AdjoinList State [accSonar#(State.accSonar - Input.sonar)]}
+											   else
+												  skip
+											   end
+											end)}
+
+	  BDrone = {New Tk.button tkInit(parent:W
+									 text:'Drone'
+									 action:proc{$}
+											   if State.accDrone >= Input.drone then
+												  KindFire = {PosFiring drone}
+												  NewState = {AdjoinList State [accDrone#(State.accDrone - Input.drone)]}
+											   else
+												  skip
+											   end
+											end)}
+	  BNull = {New Tk.button tkInit(parent:W
+									text:'Nothing'
+									action:proc{$}
+											  {W tkClose}
+											  KindFire = null
+											  NewState = State
+										   end)}
+
+	  {Tk.send pack(L1 BMissile BMine BSonar BDrone BNull fill:x padx:4 pady:4)}
+
+	  	  
+	  {Wait NewState}
+      ID = State.id
+	  NewState
+   end
+
+   fun{FireMine State ID Mine}
 	  fun{RemoveMine LMine Mine}
 		 case LMine of nil then nil
 		 []HMine|TMine then if HMine == Mine then TMine
@@ -198,17 +326,60 @@ define
 							end
 		 end
 	  end
+
+	  fun{ChoseMine}
+		 Mine WPos L1 B
+	  in
+		 WPos = {New Tk.toplevel tkInit(title:'Chose Mine')}
+		 L1 = {New Tk.label tkInit(parent:WPos
+								   text:'Which one ?')}
+		 B = {Map State.posMine
+			  fun{$ F}
+				 {New Tk.button tkInit(parent:WPos
+									   text:F.x#','#F.y
+									   action:proc{$}
+												 Mine = F
+											  end)}
+			  end}
+
+		 {Tk.send pack(L1 b(B) fill:x padx:4 pady:4)}
+
+		 {Wait Mine}
+		 {WPos tkClose}
+		 Mine
+	  end
    in
-      ID = State.id
+      ID = State.id	  
       if State.posMine == nil then
 		 Mine = null
 		 State
       else
-		 Mine = {ChoseMine State.posMine}
-		 if State.timeMine == 1 orelse Mine == null then 
-			{AdjoinList State [timeMine#0]} 
+		 W L1 BYes BNo
+	  in
+		 W = {New Tk.toplevel tkInit(title:'Explode mine')}
+		 L1 = {New Tk.label tkInit(parent:W
+								   text:'Do you want to explode a mine ?')}
+		 BYes = {New Tk.button tkInit(parent:W
+									  text:'Yes'
+									  action: proc{$}
+												 {W tkClose}
+												 Mine = {ChoseMine}
+											  end)}
+		 
+		 BNo = {New Tk.button tkInit(parent:W
+									 text:'No'
+									 action: proc{$}
+												Mine = null
+											 end)}
+		 
+		 {Tk.send pack(L1 BYes BNo fill:x padx:4 pady:4)}
+
+		 if Mine == null then
+			{W tkClose}
+			State
 		 else
-			{AdjoinList State [timeMine#1 posMine#{RemoveMine State.posMine Mine}]}
+			{W tkClose}
+			{AdjoinList State [posMine#{RemoveMine State.posMine Mine}]}
 		 end
       end
    end
@@ -226,23 +397,59 @@ define
    end
 
    fun{SayMove State ID Direction}
-      {System.show Direction}
+	  W L1
+   in
+	  W = {New Tk.toplevel tkInit(title:'Move')}
+	  L1 = {New Tk.label tkInit(parent:W
+								text:ID.color#' has move to the '#Direction)}
+	 
+	  thread {Delay Time} {W tkClose} end
+	  
+	  {Tk.send pack(L1 fill:x padx:4 pady:4)}
+	  
       State
    end
 
    fun{SaySurface State ID}
-      {System.show "Surface"}
-      {System.show ID}
+	  W L1
+   in
+	  W = {New Tk.toplevel tkInit(title:'Surface')}
+	  L1 = {New Tk.label tkInit(parent:W
+								text:ID.color#' is back to the surface')}
+	  
+	  thread {Delay Time} {W tkClose} end
+
+	  
+	  {Tk.send pack(L1 fill:x padx:4 pady:4)}
+
       State
    end
 
    fun{SayCharge State ID KindItem}
-      {System.show KindItem}
+	  W L1
+   in
+	  W = {New Tk.toplevel tkInit(title:'Charge')}
+	  L1 = {New Tk.label tkInit(parent:W
+								text:ID.color#' '#'has charge a '#KindItem)}
+
+	  thread {Delay Time} {W tkClose} end
+
+	  {Tk.send pack(L1 fill:x padx:4 pady:4)}
+	  
       State
    end
 
    fun{SayMinePlaced State ID}
-      {System.show 'Mine Placed'}
+	  W L1
+   in
+	  W = {New Tk.toplevel tkInit(title:'Mine')}
+	  L1 = {New Tk.label tkInit(parent:W
+								text:ID.color#' has place a mine')}
+
+	  thread {Delay Time} {W tkClose} end
+
+	  {Tk.send pack(L1 fill:x padx:4 pady:4)}
+
       State
    end
 
@@ -282,6 +489,7 @@ define
       Type
       X
    in
+	  ID = State.id
       drone(Type X) = Drone
       if Type == row then
 		 Answer = State.curPos.x == X
@@ -291,10 +499,32 @@ define
    end
 
    fun{SayAnswerDrone State Drone ID Answer}
-      State
+	  W L1 B Unit
+   in
+	  W = {New Tk.toplevel tkInit(title:'Drone result')}
+	  if Answer then 
+		 L1 = {New Tk.label tkInit(parent:W
+								   text:ID.id#' '#ID.name#' '#ID.color#'       '#'true')}
+	  else
+		 L1 = {New Tk.label tkInit(parent:W
+								   text:ID.id#' '#ID.name#' '#ID.color#'       '#'false')}
+	  end
+
+	  B = {New Tk.button tkInit(parent:W
+								text:'OK'
+								action:proc{$}
+										  {W tkClose}
+										  Unit = unit
+										  end)}
+
+	  {Tk.send pack(L1 B fill:x padx:4 pady:4)}
+
+	  {Wait Unit}
+	  State
    end
 
    fun{SayPassingSonar State ID Answer}
+	  ID = State.id
       if {Abs {OS.rand}} mod 2 == 0 then
 		 Answer = pt(x:State.curPos.x y:({Abs {OS.rand}} mod Input.nColumn + 1))
       else
@@ -304,14 +534,56 @@ define
    end
 
    fun{SayAnswerSonar State ID Answer}
+	  W L1 B Unit
+   in
+	  W = {New Tk.toplevel tkInit(title:'Drone result')}
+	  L1 = {New Tk.label tkInit(parent:W
+								text:ID.id#' '#ID.name#' '#ID.color#'       '#Answer.x#','#Answer.y)}
+
+	  B = {New Tk.button tkInit(parent:W
+								text:'OK'
+								action:proc{$}
+										  {W tkClose}
+										  Unit = unit
+									   end)}
+
+	  {Tk.send pack(L1 B fill:x padx:4 pady:4)}
+
+	  {Wait Unit}
       State
    end
 
    fun{SayDeath State ID}
+	  W L1 B Unit
+   in
+	  W = {New Tk.toplevel tkInit(title:'Death')}
+	  L1 = {New Tk.label tkInit(parent:W
+								text:ID.color#' died')}
+
+	  B = {New Tk.button tkInit(parent:W
+								text:'OK'
+								action:proc{$}
+										  {W tkClose}
+										  Unit = unit
+									   end)}
+
+	  {Tk.send pack(L1 B fill:x padx:4 pady:4)}
+
+	  {Wait Unit}
       State
    end
 
    fun{SayDamageTaken State ID Damage LifeLeft}
+	  W L1
+   in
+	  W = {New Tk.toplevel tkInit(title:'Damage')}
+	  L1 = {New Tk.label tkInit(parent:W
+								text:ID.color#' has '#LifeLeft#' life left')}
+	  
+	  thread {Delay Time} {W tkClose} end
+	  
+	  {Tk.send pack(L1 fill:x padx:4 pady:4)}
+
       State
    end
 
