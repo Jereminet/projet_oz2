@@ -11,8 +11,8 @@ define
 
    fun{PlayerIDInit LPlay LCol ID}
       case LPlay#LCol
-      of (HPlay|TPlay)#(HCol|TCol) then ID.color = HCol ID.name = HPlay
-		 {PlayerManager.playerGenerator HPlay HCol ID}|{PlayerIDInit TPlay TCol id(id:ID.id + 1 color:_ name:_)}
+      of (HPlay|TPlay)#(HCol|TCol) then
+	 {PlayerManager.playerGenerator HPlay HCol ID}|{PlayerIDInit TPlay TCol ID + 1}
       else nil
       end
    end
@@ -252,7 +252,7 @@ in
    Surf = {MakeSurf surf() Input.nbPlayer}
    PortGUI = {GUI.portWindow}
    {Send PortGUI buildWindow}
-   AllPort = {PlayerIDInit Input.players Input.colors id(id:1 color:_ name:_)}
+   AllPort = {PlayerIDInit Input.players Input.colors 1}
    {PlayerPtInit AllPort}%{System.show 'dessiner'}
    if Input.isTurnByTurn then {Turn AllPort 1 Surf 0} else {Simultaneous AllPort} end
 end

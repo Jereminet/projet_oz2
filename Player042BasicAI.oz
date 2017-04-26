@@ -359,9 +359,11 @@ in
       Stream
       Port
       State
+      Id
    in
+      Id = id(id:ID color:Color name:basic)
       Port = {NewPort Stream}
-      State = submarine(curPos:pt(x:_ y:_) curDir:surface accMissile:0 accMine:0 accSonar:0 accDrone:0 posMine:nil timeMine:1 life:Input.maxDamage id:ID map:Input.map)
+      State = submarine(curPos:pt(x:_ y:_) curDir:surface accMissile:0 accMine:0 accSonar:0 accDrone:0 posMine:nil timeMine:1 life:Input.maxDamage id:Id map:Input.map)
       thread
 		 {TreatStream Stream State}
       end

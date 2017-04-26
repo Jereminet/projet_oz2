@@ -115,6 +115,7 @@ in
       LabelScore = label(text:Input.maxDamage borderwidth:5 handle:HandleScore relief:solid bg:Color ipadx:5 ipady:5)
       HandlePath = {DrawPath Grid Color X Y}
       {Grid.grid configure(LabelSub row:X+1 column:Y+1 sticky:wesn)}
+      {System.show ID}
       {Grid.score configure(LabelScore row:1 column:Id sticky:wesn)}
       {HandlePath 'raise'()}
       {Handle 'raise'()}
